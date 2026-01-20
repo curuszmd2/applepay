@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Wallet Terminal</title>
+    <style>
+        :root {
+            --ios-bg: #000000;
+            --ios-card-bg: #1c1c1e;
+            --ios-text: #ffffff;
+            --ios-gray: #8e8e93;
+            --ios-blue: #0a84ff;
+            --ios-green: #30d158;
+            --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--ios-bg);
+            font-family: var(--ios-font);
+            color: var(--ios-text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Шапка */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top));
+        }
+
+        .header-title {
+            font-size: 17px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            margin-left: 40px;
+        }
+
+        .done-btn {
+            color: var(--ios-blue);
+            font-size: 17px;
+            font-weight: 400;
+            cursor: pointer;
+        }
+
+        /* Контейнер карты */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 20px;
+        }
+
+        .card {
+            width: 92%;
+            max-width: 380px;
+            aspect-ratio: 1.586 / 1;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #1a1a1c 0%, #000000 100%);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            position: relative;
+            padding: 25px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border: 0.5px solid #333;
+            transition: transform 0.3s ease;
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .apple-logo-text {
+            font-weight: 600;
+            font-size: 19px;
+            letter-spacing: -0.5px;
+        }
+
+        .chip {
+            width: 45px;
+            height: 34px;
+            background: linear-gradient(135deg, #d4af37, #f9d976);
+            border-radius: 6px;
+        }
+
+        .balance-container {
+            margin-top: 10px;
+        }
+
+        .balance-label {
+            font-size: 12px;
+            color: var(--ios-gray);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .balance-amount {
+            font-size: 44px;
+            font-weight: 700;
+            margin-top: 2px;
+            letter-spacing: -1px;
+        }
+
+        .card-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--ios-gray);
+            font-size: 15px;
+        }
+
+        /* Кнопка и нижняя часть */
+        .bottom-sheet {
+            background-color: var(--ios-card-bg);
+            width: 100%;
+            padding: 25px 20px;
+            padding-bottom: max(30px, env(safe-area-inset-bottom));
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+        }
+
+        .status-text {
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: var(--ios-gray);
+            height: 20px;
+        }
+
+        .pay-button {
+            width: 100%;
+            max-width: 350px;
+            height: 58px;
+            background-color: var(--ios-text);
+            color: black;
+            border: none;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .pay-button:active {
+            transform: scale(0.96);
+            background-color: #d1d1d6;
+        }
+        
+        .pay-button.success {
+             background-color: var(--ios-green);
+             color: white;
+        }
+
+        /* Реалистичный спиннер */
+        .spinner {
+            display: none;
+            width: 26px;
+            height: 26px;
+            border: 3px solid rgba(0, 0, 0, 0.15);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        .pay-button.loading .spinner {
+            display: block;
+        }
+        
+        .pay-button.loading span {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Эффект прихода денег */
+        @keyframes pulse-green {
+            0% { color: white; }
+            50% { color: var(--ios-green); }
+            100% { color: white; }
+        }
+
+        .balance-plus {
+            animation: pulse-green 0.5s ease-in-out;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-title">Wallet</div>
+        <div class="done-btn" onclick="location.reload()">Main Card</div>
+    </div>
+
+    <div class="main-content">
+        <div class="card" id="mainCard">
+            <div class="card-top">
+                <div class="apple-logo-text"> Cash</div>
+                <div class="chip"></div>
+            </div>
+            <div class="balance-container">
+                <div class="balance-label">Ваш баланс</div>
+                <div class="balance-amount" id="cardBalance">€ 0,00</div>
+            </div>
+            <div class="card-bottom">
+                <div>•••• 4491</div>
+                <div style="font-size: 12px; font-weight: 600;">APPLE PAY</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-sheet">
+        <div class="status-text" id="statusMsg">Готов к списанию</div>
+        <button class="pay-button" id="payBtn" onclick="startPrank()">
+            <span id="btnText">Списать € 5.00</span>
+            <div class="spinner"></div>
+        </button>
+    </div>
+
+    <audio id="paySound" src="pay.mp3" preload="auto"></audio>
+
+    <script>
+        let balance = 0.00;
+        let isProcessing = false;
+
+        const balanceEl = document.getElementById('cardBalance');
+        const payBtn = document.getElementById('payBtn');
+        const btnText = document.getElementById('btnText');
+        const statusMsg = document.getElementById('statusMsg');
+        const sound = document.getElementById('paySound');
+        const card = document.getElementById('mainCard');
+
+        function formatEuro(val) {
+            return '€ ' + val.toFixed(2).replace('.', ',');
+        }
+
+        function startPrank() {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            // Визуальный эффект сканирования
+            payBtn.classList.add('loading');
+            statusMsg.innerText = "Поиск устройства...";
+            card.style.transform = "translateY(-10px)";
+
+            if (navigator.vibrate) navigator.vibrate(40);
+
+            // Имитация процесса списания (1 секунда)
+            setTimeout(() => {
+                // Успех
+                sound.currentTime = 0;
+                sound.play().catch(e => {
+                    alert("Нажми еще раз (нужно разрешение на звук)");
+                    isProcessing = false;
+                    payBtn.classList.remove('loading');
+                });
+
+                // Прибавляем 5 евро
+                balance += 5.00;
+                balanceEl.textContent = formatEuro(balance);
+                balanceEl.classList.add('balance-plus');
+
+                // Состояние успеха
+                payBtn.classList.remove('loading');
+                payBtn.classList.add('success');
+                btnText.innerText = "Получено ✓";
+                statusMsg.innerText = "Деньги списаны!";
+                statusMsg.style.color = "#30d158";
+
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+
+                // Сброс для следующего раза через 2 секунды
+                setTimeout(() => {
+                    payBtn.classList.remove('success');
+                    btnText.innerText = "Списать € 5.00";
+                    statusMsg.innerText = "Готов к списанию";
+                    statusMsg.style.color = "#8e8e93";
+                    balanceEl.classList.remove('balance-plus');
+                    card.style.transform = "translateY(0)";
+                    isProcessing = false;
+                }, 2000);
+
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
